@@ -9,6 +9,7 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
     private JFrame window;
     private Timer timer = new Timer(100, this);
     private Grid testGrid;
+    boolean clickedForTheFirstTime = false;
 
     public static void main(String[] args) {
         new Frame();
@@ -31,7 +32,7 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
         window.setLocationRelativeTo(null);
         window.setVisible(true);
 
-        testGrid = new Grid(20);
+        testGrid = new Grid(20, 50);
 
         this.revalidate();
         this.repaint();
@@ -43,7 +44,9 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
         timer.setDelay(50);
         timer.start();
 
-        testGrid.draw(g);
+        if (testGrid != null) {
+            testGrid.draw(g);
+        }
 
     }
 
@@ -60,6 +63,12 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
     @Override
     public void mousePressed(MouseEvent e) {
         Tile tile = testGrid.handleClick(e.getX(), e.getY());
+        if (!clickedForTheFirstTime) {
+            System.out.println("YOO");
+            testGrid.populateBombs();
+            testGrid.assignNeighborCounts();
+        }
+        clickedForTheFirstTime = true;
         System.out.println(tile.getTileID());
     }
 
@@ -91,7 +100,7 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
         if (key == KeyEvent.VK_Q) {
             System.exit(0);
         } else if (key == KeyEvent.VK_R) {
-
+            this.testGrid = new Grid(20, 50);
         }
     }
 

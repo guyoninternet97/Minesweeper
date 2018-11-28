@@ -2,12 +2,15 @@ package minesweeper.jpproulx;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Grid {
 
     private int size;
     private Tile[][] grid;
     private int numBombs;
+    public boolean assignedBombs = true;
 
     public Grid(int size, int numBombs) {
 
@@ -21,6 +24,7 @@ public class Grid {
         this.size = size;
         grid = new Tile[size][size];
         populateTiles();
+        assignNeighborCounts();
     }
 
     private void populateTiles() {
@@ -31,11 +35,48 @@ public class Grid {
         }
     }
 
-    private void populateBombs() {
-        
+    public void populateBombs() {
+        ArrayList<Point> pointsWithoutBombs = new ArrayList<>();
+
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                pointsWithoutBombs.add(new Point(i, j));
+            }
+        }
+        //Assign bombs to a remaining tile which doesn't have a bomb.
+        for (int i = 0; i < this.numBombs; i++) {
+            int pointIndex = ThreadLocalRandom.current().nextInt(0, pointsWithoutBombs.size());
+            if (!grid[(int)pointsWithoutBombs.get(pointIndex).getY()][(int)pointsWithoutBombs.get(pointIndex).getX()].isClicked) {
+                grid[(int)pointsWithoutBombs.get(pointIndex).getY()][(int)pointsWithoutBombs.get(pointIndex).getX()].giveBomb();
+            }
+            pointsWithoutBombs.remove(pointIndex);
+        }
+
+    }
+
+    public void assignNeighborCounts() {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                int count = 0;
+                try {
+                    if (grid[i - 1][j - 1].hasBomb()) { count++; }
+                    if (grid[i][j - 1].hasBomb()) { count++; }
+                    if (grid[i - 1][j].hasBomb()) { count++; }
+                    if (grid[i - 1][j + 1].hasBomb()) { count++; }
+                    if (grid[i + 1][j - 1].hasBomb()) { count++; }
+                    if (grid[i + 1][j + 1].hasBomb()) { count++; }
+                    if (grid[i + 1][j].hasBomb()) { count++; }
+                    if (grid[i][j + 1].hasBomb()) { count++; }
+                } catch (Exception e) {
+                    //Do nothing!
+                }
+                grid[i][j].setExplosiveNeighbors(count);
+            }
+        }
     }
 
     public void draw(Graphics g) {
+
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 Tile tempTile = grid[i][j];

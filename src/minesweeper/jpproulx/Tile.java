@@ -40,7 +40,15 @@ public class Tile {
         if (isClicked) {
             g.setColor(Color.WHITE);
         }
+        if (hasBomb) {
+            g.setColor(Color.BLACK);
+        }
         g.fillRect(x + 2, y + 2, TILE_WIDTH - 2, TILE_HIEGHT - 2);
+        g.setColor(Color.red);
+        if (isClicked) {
+            g.drawString(Integer.toString(explosiveNeighbors), x + 11, y + 15);
+        }
+
     }
 
     /***
@@ -55,6 +63,10 @@ public class Tile {
             hasBomb = true;
         }
         return true;
+    }
+
+    public boolean hasBomb() {
+        return hasBomb;
     }
 
     /***
