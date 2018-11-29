@@ -10,6 +10,7 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
     private Timer timer = new Timer(100, this);
     private Grid testGrid;
     boolean clickedForTheFirstTime = false;
+    private int size;
 
     public static void main(String[] args) {
         new Frame();
@@ -25,14 +26,15 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
 
         window = new JFrame();
         window.setContentPane(this);
-        window.setTitle("A* Pathfinding Visualization");
+        window.setTitle("Minesweeper!");
         window.getContentPane().setPreferredSize(new Dimension(700, 600));
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.pack();
         window.setLocationRelativeTo(null);
         window.setVisible(true);
 
-        testGrid = new Grid(20, 50);
+        size = 16;
+        testGrid = new Grid(this.size, 25);
 
         this.revalidate();
         this.repaint();
@@ -62,14 +64,22 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
 
     @Override
     public void mousePressed(MouseEvent e) {
-        Tile tile = testGrid.handleClick(e.getX(), e.getY());
-        if (!clickedForTheFirstTime) {
-            System.out.println("YOO");
-            testGrid.populateBombs();
-            testGrid.assignNeighborCounts();
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            testGrid.handleClick(e.getX(), e.getY());
         }
-        clickedForTheFirstTime = true;
-        System.out.println(tile.getTileID());
+
+        if (SwingUtilities.isRightMouseButton(e)) {
+            testGrid.handleFlag(e.getX(), e.getY());
+        }
+
+        testGrid.checkCompletion();
+
+        if (!clickedForTheFirstTime) {
+            testGrid.populateBombs();
+            clickedForTheFirstTime = true;
+        }
+
+
     }
 
     @Override
@@ -100,7 +110,8 @@ public class Frame extends JPanel implements MouseListener, ActionListener, KeyL
         if (key == KeyEvent.VK_Q) {
             System.exit(0);
         } else if (key == KeyEvent.VK_R) {
-            this.testGrid = new Grid(20, 50);
+            this.testGrid = new Grid(this.size, 25);
+            this.clickedForTheFirstTime = false;
         }
     }
 

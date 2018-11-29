@@ -1,8 +1,7 @@
 package minesweeper.jpproulx;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Grid {
@@ -11,6 +10,8 @@ public class Grid {
     private Tile[][] grid;
     private int numBombs;
     public boolean assignedBombs = true;
+    Set<Tile> tilesToHandle = new HashSet<>();
+    private boolean populatedBombs = false;
 
     public Grid(int size, int numBombs) {
 
@@ -52,27 +53,78 @@ public class Grid {
             pointsWithoutBombs.remove(pointIndex);
         }
 
+        this.assignNeighborCounts();
+
     }
 
     public void assignNeighborCounts() {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 int count = 0;
-                try {
-                    if (grid[i - 1][j - 1].hasBomb()) { count++; }
-                    if (grid[i][j - 1].hasBomb()) { count++; }
-                    if (grid[i - 1][j].hasBomb()) { count++; }
-                    if (grid[i - 1][j + 1].hasBomb()) { count++; }
-                    if (grid[i + 1][j - 1].hasBomb()) { count++; }
-                    if (grid[i + 1][j + 1].hasBomb()) { count++; }
-                    if (grid[i + 1][j].hasBomb()) { count++; }
-                    if (grid[i][j + 1].hasBomb()) { count++; }
-                } catch (Exception e) {
-                    //Do nothing!
-                }
+
+                //TODO: Make this less disgusting
+                try {if (grid[i - 1][j - 1].hasBomb()) { count++; } } catch (Exception e) { }
+                try {if (grid[i    ][j - 1].hasBomb()) { count++; } } catch (Exception e) { }
+                try {if (grid[i - 1][j    ].hasBomb()) { count++; } } catch (Exception e) { }
+                try {if (grid[i - 1][j + 1].hasBomb()) { count++; } } catch (Exception e) { }
+                try {if (grid[i + 1][j - 1].hasBomb()) { count++; } } catch (Exception e) { }
+                try {if (grid[i + 1][j + 1].hasBomb()) { count++; } } catch (Exception e) { }
+                try {if (grid[i + 1][j    ].hasBomb()) { count++; } } catch (Exception e) { }
+                try {if (grid[i    ][j + 1].hasBomb()) { count++; } } catch (Exception e) { }
+
+
                 grid[i][j].setExplosiveNeighbors(count);
             }
         }
+    }
+
+    public void checkCompletion() {
+        boolean isDone = true;
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (!grid[i][j].isClicked && !grid[i][j].hasBomb()) {
+                    isDone = false;
+                }
+            }
+        }
+
+        if (isDone) {
+            System.out.println("Win!");
+            System.exit(0);
+        }
+    }
+
+    public void handle0Tiles(Tile tile) {
+        if (!tilesToHandle.contains(tile)) {
+            tilesToHandle.add(tile);
+            Set<Tile> set = getValidNeighborPositions(tile.x, tile.y);
+            System.out.println("Size of set: " + set.size());
+            for (Tile t : set) {
+                if (t.getExplosiveNeighbors() == 0) {
+                    tile.isClicked = true;
+                    handle0Tiles(t);
+                } else {
+                    t.isClicked = true;
+                }
+            }
+        }
+    }
+
+    public Set<Tile> getValidNeighborPositions(int xIn, int yIn) {
+        Set<Tile> returnSet = new HashSet<>();
+        Point XY = adjustXY(xIn, yIn);
+        yIn = XY.x;
+        xIn = XY.y;
+        try { returnSet.add(grid[xIn - 1][yIn - 1]);} catch (Exception e) { }
+        try { returnSet.add(grid[xIn    ][yIn - 1]);} catch (Exception e) { }
+        try { returnSet.add(grid[xIn - 1][yIn    ]);} catch (Exception e) { }
+        try { returnSet.add(grid[xIn - 1][yIn + 1]);} catch (Exception e) { }
+        try { returnSet.add(grid[xIn + 1][yIn - 1]);} catch (Exception e) { }
+        try { returnSet.add(grid[xIn + 1][yIn + 1]);} catch (Exception e) { }
+        try { returnSet.add(grid[xIn + 1][yIn    ]);} catch (Exception e) { }
+        try { returnSet.add(grid[xIn    ][yIn + 1]);} catch (Exception e) { }
+
+        return returnSet;
     }
 
     public void draw(Graphics g) {
@@ -91,8 +143,30 @@ public class Grid {
         int newY = (int)newXY.getY();
 
         grid[newY][newX].isClicked = true;
+        if (!populatedBombs) {
+            populateBombs();
+            populatedBombs = true;
+        }
+        if (grid[newY][newX].getExplosiveNeighbors() == 0) {
+            handle0Tiles(grid[newY][newX]);
+        }
+
+        for (Tile tile : tilesToHandle) {
+            tile.isClicked = true;
+        }
+        tilesToHandle.clear();
         return grid[newY][newX];
     }
+
+    public void handleFlag(int x, int y) {
+        Point newXY = adjustXY(x, y);
+        int newX = newXY.x;
+        int newY = newXY.y;
+
+        grid[newY][newX].toggleFlag();
+    }
+
+
 
     private Point adjustXY(int x, int y) {
         int newX = 0;

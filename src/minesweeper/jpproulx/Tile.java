@@ -1,12 +1,14 @@
 package minesweeper.jpproulx;
 
 import java.awt.*;
+import java.util.Set;
 
 public class Tile {
 
     private boolean hasBomb;
-    private int x, y;
+    public int x, y;
     private int tileID;
+    private boolean isFlag = false;
     private static int staticTileID = 0;
     private int explosiveNeighbors;
     static final int TILE_HIEGHT = 24;
@@ -40,15 +42,23 @@ public class Tile {
         if (isClicked) {
             g.setColor(Color.WHITE);
         }
-        if (hasBomb) {
-            g.setColor(Color.BLACK);
+        if (isFlag) {
+            g.setColor(Color.RED);
         }
         g.fillRect(x + 2, y + 2, TILE_WIDTH - 2, TILE_HIEGHT - 2);
         g.setColor(Color.red);
-        if (isClicked) {
+        if (isClicked && !hasBomb) {
             g.drawString(Integer.toString(explosiveNeighbors), x + 11, y + 15);
         }
 
+        if (isClicked && hasBomb) {
+            System.exit(0);
+        }
+
+    }
+
+    public void toggleFlag() {
+        this.isFlag = !this.isFlag;
     }
 
     /***
@@ -64,6 +74,7 @@ public class Tile {
         }
         return true;
     }
+
 
     public boolean hasBomb() {
         return hasBomb;
@@ -88,5 +99,19 @@ public class Tile {
 
     public int getTileID() {
         return this.tileID;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof Tile)) {
+            return false;
+        }
+
+        Tile oTile = (Tile)o;
+        return (oTile.x == this.x && oTile.y == this.y);
     }
 }
